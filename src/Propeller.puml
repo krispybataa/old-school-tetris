@@ -1,0 +1,32 @@
+@startuml
+
+class Propeller {
+    - double thrust
+    - int mileage
+}
+
+class Engine {
+    - double power
+    - int mileage
+}
+
+class Plane {
+    - Propeller[] myPropeller
+    - Engine myEngine
+    + Plane()
+}
+
+class Pilot {
+    - int flightHours
+    + void fly(Plane p)
+}
+
+class FighterPilot {
+    - int rank
+}
+
+Plane "1" -- "2" Propeller : has
+Plane "1" -- "1" Engine : has
+FighterPilot -|> Pilot : extends
+
+@enduml
