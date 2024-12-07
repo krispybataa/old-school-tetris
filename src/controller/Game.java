@@ -1,6 +1,5 @@
 package controller;
 
-
 import model.*;
 import view.GameScreen;
 import sounds.Sound;
@@ -18,6 +17,9 @@ public class Game implements Runnable, KeyListener {
     private GameScreen gmsScreen;
     public static Random R = new Random();
     public final static int ANIMATION_DELAY = 45;
+    private static Game instance;
+    private long lastRestartTime = 0;
+    private static final long RESTART_COOLDOWN = 500; // 500ms cooldown
 
     //Gameplay Threads
     private Thread threadAnimation;
@@ -27,6 +29,7 @@ public class Game implements Runnable, KeyListener {
     private long lTimeStep;
     final static int INPUT_DELAY = 40;
     private boolean bMuted = true;
+    private boolean isRestarting = false;
 
     private final int PAUSE = 80, // p key
             QUIT = 81, // q key
@@ -34,7 +37,8 @@ public class Game implements Runnable, KeyListener {
             RIGHT = 39, // move piece right; right arrow
             START = 83, // s key
             MUTE = 77, // m-key
-            DOWN = 40, // move piece faster down
+            DOWN = 40, // move piece down; down arrow
+            UP = 38, // rotate piece; up arrow
             SPACE = 32; // rotate piece
 
     private Clip clipBGM;
@@ -44,6 +48,11 @@ public class Game implements Runnable, KeyListener {
         gmsScreen = new GameScreen(DIM);
         gmsScreen.addKeyListener(this);
         clipBGM = Sound.clipForLoopFactory("tetris_tone_loop_1_.wav");
+        instance = this;
+    }
+
+    public static Game getInstance() {
+        return instance;
     }
 
     public static void main(String[] args) {
@@ -70,6 +79,99 @@ public class Game implements Runnable, KeyListener {
         if(!GameLogic.getInstance().isbLoaded() && threadLoaded == null){
             threadLoaded = new Thread(this);
             threadLoaded.start();
+        }
+    }
+
+    public void restartGame() {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastRestartTime < RESTART_COOLDOWN || isRestarting) {
+            return; // Ignore restart if too soon or already restarting
+        }
+        
+        isRestarting = true;
+        lastRestartTime = currentTime;
+        
+        try {
+            // Stop all existing threads first
+            stopThreads();
+            
+            // Reset the game state
+            GameLogic.getInstance().clearBoard();
+            GameLogic.getInstance().initGame();
+            GameLogic.getInstance().setbPlaying(true);
+            GameLogic.getInstance().setbPaused(false);
+            GameLogic.getInstance().setbGameOver(false);
+            GameLogic.getInstance().setbRestarted(true);
+            
+            // Reset the screen
+            gmsScreen.resetGame();
+            
+            // Create new pieces
+            gmsScreen.tetronimoCurrent = createNewTetronimo();
+            gmsScreen.tetronimoOnDeck = createNewTetronimo();
+            
+            // Reset time tracking
+            lTimeStep = System.currentTimeMillis();
+            playTime = System.currentTimeMillis();
+            
+            // Start new threads
+            callThreads();
+            
+            // Reset music if not muted
+            if(!bMuted){
+                if(clipBGM.isRunning()) {
+                    clipBGM.stop();
+                }
+                clipBGM.setFramePosition(0);
+                clipBGM.loop(Clip.LOOP_CONTINUOUSLY);
+            }
+        } finally {
+            isRestarting = false;
+        }
+    }
+
+    private void stopThreads() {
+        if(threadAnimation != null) {
+            threadAnimation.interrupt();
+            try {
+                threadAnimation.join(100); // Wait for thread to die
+            } catch (InterruptedException e) {
+                // Ignore
+            }
+            threadAnimation = null;
+        }
+        
+        if(threadAutoDown != null) {
+            threadAutoDown.interrupt();
+            try {
+                threadAutoDown.join(100); // Wait for thread to die
+            } catch (InterruptedException e) {
+                // Ignore
+            }
+            threadAutoDown = null;
+        }
+    }
+
+    private void restartThreads() {
+        stopThreads();
+        callThreads();
+    }
+
+    public void startGame(){
+        gmsScreen.tetronimoCurrent = createNewTetronimo();
+        gmsScreen.tetronimoOnDeck = createNewTetronimo();
+
+        GameLogic.getInstance().clearBoard();
+        GameLogic.getInstance().initGame();
+        GameLogic.getInstance().setbPlaying(true);
+        GameLogic.getInstance().setbPaused(false);
+        GameLogic.getInstance().setbGameOver(false);
+        
+        // Restart threads when starting game
+        restartThreads();
+        
+        if(!bMuted){
+            clipBGM.loop(Clip.LOOP_CONTINUOUSLY);
         }
     }
 
@@ -136,20 +238,6 @@ public class Game implements Runnable, KeyListener {
         }
     }
 
-    private void startGame(){
-        gmsScreen.tetronimoCurrent = createNewTetronimo();
-        gmsScreen.tetronimoOnDeck = createNewTetronimo();
-
-        GameLogic.getInstance().clearBoard();
-        GameLogic.getInstance().initGame();
-        GameLogic.getInstance().setbPlaying(true);
-        GameLogic.getInstance().setbPaused(false);
-        GameLogic.getInstance().setbGameOver(false);
-        if(!bMuted){
-            clipBGM.loop(Clip.LOOP_CONTINUOUSLY);
-        }
-    }
-
     private Tetronimo createNewTetronimo() {
         int nKey = R.nextInt(TETRONIMO_NO);
         if (nKey >= 0 && nKey <= 12) {
@@ -183,12 +271,26 @@ public class Game implements Runnable, KeyListener {
     public void keyPressed(KeyEvent event){
         playTime = System.currentTimeMillis();
         int nKeyPressed = event.getKeyCode();
+        
+        // Handle restart key (R)
+        if(nKeyPressed == KeyEvent.VK_R) {
+            restartGame();
+            return;
+        }
+
         if(nKeyPressed == START && GameLogic.getInstance().isbLoaded() && !GameLogic.getInstance().isbPlaying()){
             startGame();
         }
 
         if(nKeyPressed == PAUSE & playTime > lTimeStep + INPUT_DELAY){
-            GameLogic.getInstance().setbPaused(!GameLogic.getInstance().isbPaused());
+            boolean wasPaused = GameLogic.getInstance().isbPaused();
+            GameLogic.getInstance().setbPaused(!wasPaused);
+            
+            // If unpausing, restart threads
+            if (wasPaused) {
+                restartThreads();
+            }
+            
             lTimeStep = System.currentTimeMillis();
         }
 
@@ -222,8 +324,8 @@ public class Game implements Runnable, KeyListener {
                 tetronimoTest = null;
             }
         }
-        // space = rotate
-        if (nKeyPressed == SPACE) {
+        // up = rotate clockwise
+        if (nKeyPressed == UP) {
             Tetronimo tetronimoTest = gmsScreen.tetronimoCurrent.cloneTetronimo();
             tetronimoTest.rotate();
             if (gmsScreen.grid.requestLateral(tetronimoTest)) {
@@ -237,7 +339,6 @@ public class Game implements Runnable, KeyListener {
         if (nKeyPressed == MUTE) {
             if (!bMuted) {
                 stopLoopingSounds(clipBGM);
-
                 bMuted = !bMuted;
             } else {
                 clipBGM.loop(Clip.LOOP_CONTINUOUSLY);
@@ -255,6 +356,4 @@ public class Game implements Runnable, KeyListener {
     // Needed because of KeyListener implementation
     public void keyTyped(KeyEvent e) {
     }
-
-
 }

@@ -79,49 +79,54 @@ public class Grid {
         }
     }
     synchronized public void checkCompletedRow(){
-        LinkedList fullRowItems = new LinkedList();
-        LinkedList repositioningItems = new LinkedList();
+        LinkedList<Integer> fullRowItems = new LinkedList<>();
+        LinkedList<Block> repositioningItems = new LinkedList<>();
+        int rowsCleared = 0;
 
         int nRows = Grid.ROWS - 1;
         while(nRows >= 0){
-            for (int i = bOccupiedBlocks.size() - 1 ; i >= 0; i--) {
+            fullRowItems.clear();
+            // Count blocks in current row
+            for (int i = bOccupiedBlocks.size() - 1; i >= 0; i--) {
                 Block block = (Block) bOccupiedBlocks.get(i);
                 if(block.getbRow() == nRows){
                     fullRowItems.add(i);
                 }
             }
 
-            if (fullRowItems.size() == Grid.COLS){
-                while (fullRowItems.size() >0){
-                    Block block = (Block) bOccupiedBlocks.remove(((Integer) fullRowItems.removeFirst()).intValue());
-                    GameLogic.getInstance().addbScore(block.getPOINTVALUE());
-
-                    if(GameLogic.getInstance().getbScore() > GameLogic.getInstance().getbHighScore()){
-                        GameLogic.getInstance().setbHighScore(GameLogic.getInstance().getbScore());
-                    }
-
-                    GameLogic.getInstance().checkbThreshold();
-                    for (int j = bOccupiedBlocks.size() - 1; j >= 0 ; j--) {
-                        Block jblock = (Block) bOccupiedBlocks.get(j);
-                        if (jblock.getbRow() < nRows){
-                            bOccupiedBlocks.remove(j);
-                            jblock.setbRow(jblock.getbRow() + 1);
-                            repositioningItems.add(jblock);
-                        }
-                    }
-
-                    while(repositioningItems.size() > 0){
-                        bOccupiedBlocks.add(repositioningItems.removeLast());
-                    }
-                    fullRowItems.clear();
-                    repositioningItems.clear();
+            if (fullRowItems.size() == Grid.COLS) {
+                rowsCleared++;
+                // Remove all blocks in the full row
+                for (Integer index : fullRowItems) {
+                    bOccupiedBlocks.remove(index.intValue());
                 }
-            }else if(fullRowItems.size() == 0){
-                return;
+                
+                // Award 100 points for clearing this row
+                GameLogic.getInstance().addbScore(100);
+
+                // Update high score if needed
+                if(GameLogic.getInstance().getbScore() > GameLogic.getInstance().getbHighScore()){
+                    GameLogic.getInstance().setbHighScore(GameLogic.getInstance().getbScore());
+                }
+                GameLogic.getInstance().checkbThreshold();
+
+                // Move all blocks above this row down by one position
+                for (int i = bOccupiedBlocks.size() - 1; i >= 0; i--) {
+                    Block block = (Block) bOccupiedBlocks.get(i);
+                    if (block.getbRow() < nRows) {
+                        bOccupiedBlocks.remove(i);
+                        block.setbRow(block.getbRow() + rowsCleared);
+                        repositioningItems.add(block);
+                    }
+                }
             } else {
-                fullRowItems.clear();
                 nRows--;
             }
+        }
+
+        // Add back all repositioned blocks
+        while(!repositioningItems.isEmpty()) {
+            bOccupiedBlocks.add(repositioningItems.removeLast());
         }
     }
 

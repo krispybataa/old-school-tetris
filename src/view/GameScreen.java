@@ -48,9 +48,6 @@ public class GameScreen extends Panel {
                 }
             }
         });
-
-
-
     }
 
     private void drawScore(Graphics graphics){
@@ -70,8 +67,6 @@ public class GameScreen extends Panel {
                 ", Paused=" + GameLogic.getInstance().isbPaused() +
                 ", Restarted=" + GameLogic.getInstance().isbRestarted());
 
-
-
         Dimension dimension = this.getSize();
         if(grpOff == null || dimension.width != dimOff.width || dimension.height != dimOff.height){
             dimOff = dimension;
@@ -80,18 +75,16 @@ public class GameScreen extends Panel {
         }
 
         grpOff.setColor(customBackground);
-
         grpOff.fillRect(0,0, dimension.width, dimension.height);
         grpOff.setColor(Color.white);
         grpOff.setFont(font);
 
         // Handle restarted state
         if (GameLogic.getInstance().isbRestarted()) {
-            GameLogic.getInstance().setbRestarted(false); // Reset the state
-            // Ensure proper rendering of the grid and tetromino after restarting
+            GameLogic.getInstance().setbRestarted(false);
             drawGameElements(dimension);
             drawTetronimo(grpOff, tetronimoCurrent, dimension);
-            return; // Exit early for this frame
+            return;
         }
 
         if(GameLogic.getInstance().isbGameOver()){
@@ -105,93 +98,103 @@ public class GameScreen extends Panel {
                 displayStartText();
             }
         } else if(GameLogic.getInstance().isbPaused()) {
-            // Draw "Game Paused" text
             strDisplay = "Game Paused";
             grpOff.drawString(
                     strDisplay,
-                    (Game.DIM.width - fontMetrics.stringWidth(strDisplay)) / 2,
-                    Game.DIM.height / 4
+                    (dimension.width - fontMetrics.stringWidth(strDisplay)) / 2,
+                    dimension.height / 4
             );
 
-            // Add "Press 'R' to Restart" below "Game Paused"
             String restartText = "Press 'R' to Restart";
             grpOff.drawString(
                     restartText,
-                    (Game.DIM.width - fontMetrics.stringWidth(restartText)) / 2,
-                    (Game.DIM.height / 4) + nFontHeight + 20
+                    (dimension.width - fontMetrics.stringWidth(restartText)) / 2,
+                    (dimension.height / 4) + nFontHeight + 20
             );
-        }
-
-//        else {
-//            int nBy = (dimension.height - 150) / Grid.ROWS;
-//            int nBx = (dimension.width - 150) / Grid.COLS;
-//
-//            grpOff.setColor(Color.WHITE); // Grid lines color
-//            for (int i = 0; i <= Grid.ROWS; i++) {
-//                int y = i * nBy + 150; // Adjust for top margin
-//                grpOff.drawLine(0, y, nBx * Grid.COLS, y); // Horizontal lines
-//            }
-//            for (int j = 0; j <= Grid.COLS; j++) {
-//                int x = j * nBx;
-//                grpOff.drawLine(x, 150, x, nBy * Grid.ROWS + 150); // Vertical lines
-//            }
-//
-//
-//            Block[][] block = grid.getbBlock();
-//
-//            for (int i = 0; i < block.length; i++) {
-//                for (int j = 0; j < block[0].length; j++) {
-//                    grpOff.setColor(block[i][j].getColor());
-//                    grpOff.fill3DRect(j * nBx, i * nBy + 150, nBx, nBy, true);
-//                }
-//            }
-//
-//            grpOff.setColor(Color.white);
-//            grpOff.draw3DRect(dimension.width - 150, 0, 150, dimension.height, true);
-//            grpOff.draw3DRect(dimension.width - 140, 10, 130, 130, true );
-//            boolean[][] lts = tetronimoOnDeck.getColoredSquares(tetronimoOnDeck.getbOrientation());
-//            Color color = tetronimoOnDeck.getbColor();
-//            for (int i = 0; i < Grid.DIM; i++) {
-//                for (int j = 0; j < Grid.DIM; j++) {
-//                    if(lts[j][i]){
-//                        grpOff.setColor(color);
-//                        grpOff.fill3DRect(i * nBx + 360, j * nBy + 20, nBx, nBy, true);
-//                    }
-//                }
-//            }
-//            drawScore(grpOff);
-//        }
-
-        else {
-            int nBy = (dimension.height - 150) / Grid.ROWS;
-            int nBx = (dimension.width - 150) / Grid.COLS;
-
-            // Render the current tetromino before drawing the grid
-            if (tetronimoCurrent != null) {
-                drawTetronimo(grpOff, tetronimoCurrent, dimension);
-            }
-
-            // Draw the grid
-            grpOff.setColor(Color.WHITE); // Grid lines color
+        } else {
+            // Calculate grid dimensions based on window size
+            int minDimension = Math.min(dimension.width, dimension.height);
+            int gridSize = (int)(minDimension * 0.8); // Grid takes up 80% of the smaller dimension
+            int blockSize = gridSize / Math.max(Grid.ROWS, Grid.COLS);
+            
+            // Calculate centered position for the grid
+            int gridStartX = (dimension.width - (blockSize * Grid.COLS)) / 2;
+            int gridStartY = (dimension.height - (blockSize * Grid.ROWS)) / 2;
+            
+            // Draw the grid lines
+            grpOff.setColor(Color.WHITE);
             for (int i = 0; i <= Grid.ROWS; i++) {
-                int y = i * nBy + 150; // Adjust for top margin
-                grpOff.drawLine(0, y, nBx * Grid.COLS, y); // Horizontal lines
+                int y = gridStartY + (i * blockSize);
+                grpOff.drawLine(gridStartX, y, gridStartX + (blockSize * Grid.COLS), y);
             }
             for (int j = 0; j <= Grid.COLS; j++) {
-                int x = j * nBx;
-                grpOff.drawLine(x, 150, x, nBy * Grid.ROWS + 150); // Vertical lines
+                int x = gridStartX + (j * blockSize);
+                grpOff.drawLine(x, gridStartY, x, gridStartY + (blockSize * Grid.ROWS));
             }
 
-            // Render blocks on the grid
+            // Draw the blocks
             Block[][] block = grid.getbBlock();
             for (int i = 0; i < block.length; i++) {
                 for (int j = 0; j < block[0].length; j++) {
                     grpOff.setColor(block[i][j].getColor());
-                    grpOff.fill3DRect(j * nBx, i * nBy + 150, nBx, nBy, true);
+                    grpOff.fill3DRect(
+                        gridStartX + (j * blockSize),
+                        gridStartY + (i * blockSize),
+                        blockSize,
+                        blockSize,
+                        true
+                    );
+                }
+            }
+
+            // Draw current tetromino
+            if (tetronimoCurrent != null) {
+                boolean[][] currentShape = tetronimoCurrent.getColoredSquares(tetronimoCurrent.getbOrientation());
+                grpOff.setColor(tetronimoCurrent.getbColor());
+                for (int i = 0; i < currentShape.length; i++) {
+                    for (int j = 0; j < currentShape[i].length; j++) {
+                        if (currentShape[i][j]) {
+                            grpOff.fill3DRect(
+                                gridStartX + ((tetronimoCurrent.getbCol() + j) * blockSize),
+                                gridStartY + ((tetronimoCurrent.getbRow() + i) * blockSize),
+                                blockSize,
+                                blockSize,
+                                true
+                            );
+                        }
+                    }
+                }
+            }
+
+            // Draw next piece preview
+            int previewSize = blockSize * 4;
+            int previewX = dimension.width - previewSize - 20;
+            int previewY = 20;
+            
+            grpOff.setColor(Color.white);
+            grpOff.drawString("Next Piece:", previewX, previewY);
+            grpOff.draw3DRect(previewX, previewY + 20, previewSize, previewSize, true);
+
+            if (tetronimoOnDeck != null) {
+                boolean[][] nextPieceShape = tetronimoOnDeck.getColoredSquares(tetronimoOnDeck.getbOrientation());
+                grpOff.setColor(tetronimoOnDeck.getbColor());
+                
+                int pieceBlockSize = blockSize;
+                for (int i = 0; i < nextPieceShape.length; i++) {
+                    for (int j = 0; j < nextPieceShape[i].length; j++) {
+                        if (nextPieceShape[i][j]) {
+                            grpOff.fill3DRect(
+                                previewX + (j * pieceBlockSize) + pieceBlockSize,
+                                previewY + (i * pieceBlockSize) + 40,
+                                pieceBlockSize,
+                                pieceBlockSize,
+                                true
+                            );
+                        }
+                    }
                 }
             }
         }
-
 
         drawScore(grpOff);
         grpOff.drawString("Press 'R' to Restart", nFontWidth, nFontHeight + 20);
@@ -202,14 +205,26 @@ public class GameScreen extends Panel {
 
     //helper function
     private void drawGameElements(Dimension dimension) {
-        int nBy = (dimension.height - 150) / Grid.ROWS;
-        int nBx = (dimension.width - 150) / Grid.COLS;
+        int minDimension = Math.min(dimension.width, dimension.height);
+        int gridSize = (int)(minDimension * 0.8); // Grid takes up 80% of the smaller dimension
+        int blockSize = gridSize / Math.max(Grid.ROWS, Grid.COLS);
+        
+        // Calculate centered position for the grid
+        int gridStartX = (dimension.width - (blockSize * Grid.COLS)) / 2;
+        int gridStartY = (dimension.height - (blockSize * Grid.ROWS)) / 2;
+        
         Block[][] block = grid.getbBlock();
 
         for (int i = 0; i < block.length; i++) {
             for (int j = 0; j < block[0].length; j++) {
                 grpOff.setColor(block[i][j].getColor());
-                grpOff.fill3DRect(j * nBx, i * nBy + 150, nBx, nBy, true);
+                grpOff.fill3DRect(
+                    gridStartX + (j * blockSize),
+                    gridStartY + (i * blockSize),
+                    blockSize,
+                    blockSize,
+                    true
+                );
             }
         }
 
@@ -222,7 +237,7 @@ public class GameScreen extends Panel {
             for (int j = 0; j < Grid.DIM; j++) {
                 if(lts[j][i]){
                     grpOff.setColor(color);
-                    grpOff.fill3DRect(i * nBx + 360, j * nBy + 20, nBx, nBy, true);
+                    grpOff.fill3DRect(i * blockSize + 360, j * blockSize + 20, blockSize, blockSize, true);
                 }
             }
         }
@@ -232,8 +247,13 @@ public class GameScreen extends Panel {
     private void drawTetronimo(Graphics grpOff, Tetronimo tetronimo, Dimension dimension) {
         boolean[][] bC = tetronimo.getColoredSquares(tetronimo.getbOrientation());
         Color color = tetronimo.getbColor();
-        int nBy = (dimension.height - 150) / Grid.ROWS;
-        int nBx = (dimension.width - 150) / Grid.COLS;
+        int minDimension = Math.min(dimension.width, dimension.height);
+        int gridSize = (int)(minDimension * 0.8); // Grid takes up 80% of the smaller dimension
+        int blockSize = gridSize / Math.max(Grid.ROWS, Grid.COLS);
+        
+        // Calculate centered position for the grid
+        int gridStartX = (dimension.width - (blockSize * Grid.COLS)) / 2;
+        int gridStartY = (dimension.height - (blockSize * Grid.ROWS)) / 2;
 
         System.out.println("Drawing tetromino at Row: " + tetronimo.bRow + ", Col: " + tetronimo.bCol);
 
@@ -241,7 +261,13 @@ public class GameScreen extends Panel {
             for (int j = tetronimo.bRow; j < tetronimo.bRow + Grid.DIM; j++) {
                 if (bC[j - tetronimo.bRow][i - tetronimo.bCol]) {
                     grpOff.setColor(color);
-                    grpOff.fill3DRect(i * nBx, j * nBy + 150, nBx, nBy, true);
+                    grpOff.fill3DRect(
+                        gridStartX + (i * blockSize),
+                        gridStartY + (j * blockSize),
+                        blockSize,
+                        blockSize,
+                        true
+                    );
                     System.out.println("Block at Grid[" + j + "][" + i + "] drawn.");
                 }
             }
@@ -276,88 +302,21 @@ public class GameScreen extends Panel {
         }
     }
 
-    private void restartGame() {
-        //Logging
-        System.out.println("tetronimoCurrent Color: " + tetronimoCurrent.getbColor());
-        System.out.println("tetronimoCurrent Grid:");
-        boolean[][] squares = tetronimoCurrent.getColoredSquares(tetronimoCurrent.getbOrientation());
-        for (boolean[] row : squares) {
-            for (boolean cell : row) {
-                System.out.print(cell ? "X" : "O");
-            }
-            System.out.println();
-        }
-
-        // Clear the grid
-        grid.clearGrid();
-
-        // Reinitialize tetrominoes
-        tetronimoOnDeck = new Tetronimo();
-        tetronimoCurrent = new Tetronimo();
-
-        // Set starting position for the current tetromino
-        tetronimoCurrent.bRow = 0;
-        tetronimoCurrent.bCol = Grid.COLS / 2 - 2;
-
-        // Reset game logic flags
-        GameLogic gameLogic = GameLogic.getInstance();
-        gameLogic.resetGame();
-        gameLogic.setbPlaying(true);  // Ensure the game resumes
-        gameLogic.setbPaused(false);
-        gameLogic.setbRestarted(true); // Temporarily mark as restarted for rendering
-
-        System.out.println("Restarting Game...");
-        System.out.println("tetronimoCurrent initialized at Row: " + tetronimoCurrent.bRow + ", Col: " + tetronimoCurrent.bCol);
-
-        // Restart the game loop
-
-
-        repaint(); // Ensure the screen updates immediately
-        System.out.println("Repainting...");
+    public void resetGame() {
+        // Reset the grid
+        grid = new Grid();
+        
+        // Reset display strings
+        strDisplay = "";
+        
+        // Force a repaint
+        repaint();
     }
 
-
-
-
-
-
-
-//    private void displayTextOnScreen() {
-//
-//        strDisplay = "GAME OVER";
-//        grpOff.drawString(strDisplay,
-//                (Game.DIM.width - fontMetrics.stringWidth(strDisplay)) / 2, Game.DIM.height / 4);
-//
-//        strDisplay = "Use Arrow Keys to Move Pieces";
-//        grpOff.drawString(strDisplay,
-//                (Game.DIM.width - fontMetrics.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
-//                        + nFontHeight + 40);
-//
-//        strDisplay = "Use Space Bar to Rotate Piece";
-//        grpOff.drawString(strDisplay,
-//                (Game.DIM.width - fontMetrics.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
-//                        + nFontHeight + 80);
-//
-//        strDisplay = "'S' to Start";
-//        grpOff.drawString(strDisplay,
-//                (Game.DIM.width - fontMetrics.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
-//                        + nFontHeight + 120);
-//
-//        strDisplay = "'P' to Pause";
-//        grpOff.drawString(strDisplay,
-//                (Game.DIM.width - fontMetrics.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
-//                        + nFontHeight + 160);
-//
-//        strDisplay = "'Q' to Quit";
-//        grpOff.drawString(strDisplay,
-//                (Game.DIM.width - fontMetrics.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
-//                        + nFontHeight + 200);
-//        strDisplay = "'M' to Mute or Play Music";
-//        grpOff.drawString(strDisplay,
-//                (Game.DIM.width - fontMetrics.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
-//                        + nFontHeight + 240);
-//
-//    }
+    private void restartGame() {
+        // Let the Game class handle the restart
+        Game.getInstance().restartGame();
+    }
 
     private void displayTextOnScreen() {
         String[] gameOverText = {
