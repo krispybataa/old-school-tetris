@@ -87,9 +87,8 @@ The game leverages multiple threads for smooth gameplay:
 
 Background music and sound effects included in the game.
 ## 🫂 Team Robby D.
-
-Clark Rodriguez
-James Dela Cruz
-Jasper Perillo
+- Clark Rodriguez
+- James Dela Cruz
+- Jasper Perillo
 ---
 *Built with ❤️ using Java and Swing*
