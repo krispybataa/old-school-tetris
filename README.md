@@ -86,10 +86,10 @@ The game leverages multiple threads for smooth gameplay:
 ## 🎵 Sound Credits
 
 Background music and sound effects included in the game.
+## 🫂 Team Robby D.
 
-## 🤝 Contributing
-
-Feel free to fork, submit PRs, or report issues!
-
+Clark Rodriguez
+James Dela Cruz
+Jasper Perillo
 ---
 *Built with ❤️ using Java and Swing*
