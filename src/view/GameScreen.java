@@ -54,9 +54,9 @@ public class GameScreen extends Panel {
         graphics.setColor(Color.white);
         graphics.setFont(font);
         if(GameLogic.getInstance().getbScore() != 0){
-            graphics.drawString(" SCORE : " + GameLogic.getInstance().getbScore() + "     HIGH SCORE :  " + GameLogic.getInstance().getbHighScore(), nFontWidth, nFontHeight);
+            graphics.drawString(" SCORE :  " + GameLogic.getInstance().getbScore() + "     HIGH SCORE :  " + GameLogic.getInstance().getbHighScore(), nFontWidth, nFontHeight);
         } else {
-            graphics.drawString("SCORE: 0" + "HIGH SCORE: " + GameLogic.getInstance().getbHighScore(), nFontWidth, nFontHeight);
+            graphics.drawString("SCORE: 0" + " HIGH SCORE: " + GameLogic.getInstance().getbHighScore(), nFontWidth, nFontHeight);
         }
     }
 
@@ -288,8 +288,8 @@ public class GameScreen extends Panel {
     private void displayStartText() {
         String[] instructions = {
                 "OLD SCHOOL TETRIS",
-                "Use Arrow Keys to Move Pieces",
-                "Use Space Bar to Rotate Piece",
+                "Use [Left, Right, Down] to Move Pieces",
+                "Use [Up] to Rotate Piece",
                 "[S] to Start",
                 "[P] to Pause",
                 "[Q] to Quit",
