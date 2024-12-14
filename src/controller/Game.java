@@ -238,6 +238,26 @@ public class Game implements Runnable, KeyListener {
         }
     }
 
+    private void hardDrop() {
+        while (true) {
+            Tetronimo tetronimotest = gmsScreen.tetronimoCurrent.cloneTetronimo();
+            tetronimotest.moveDown();
+            if (gmsScreen.grid.requestDown(tetronimotest)) {
+                gmsScreen.tetronimoCurrent.moveDown();
+                tetronimotest = null;
+            } else {
+                if (GameLogic.getInstance().isbPlaying()) {
+                    gmsScreen.grid.addToOccupied(gmsScreen.tetronimoCurrent);
+                    gmsScreen.grid.checkTopRow();
+                    gmsScreen.grid.checkCompletedRow();
+                    gmsScreen.tetronimoCurrent = gmsScreen.tetronimoOnDeck;
+                    gmsScreen.tetronimoOnDeck = createNewTetronimo();
+                }
+                break;
+            }
+        }
+    }
+
     private Tetronimo createNewTetronimo() {
         int nKey = R.nextInt(TETRONIMO_NO);
         if (nKey >= 0 && nKey <= 12) {
@@ -296,6 +316,11 @@ public class Game implements Runnable, KeyListener {
 
         if(nKeyPressed == QUIT && playTime > lTimeStep + INPUT_DELAY){
             System.exit(0);
+        }
+
+        if(nKeyPressed == SPACE && GameLogic.getInstance().isbPlaying() && !GameLogic.getInstance().isbPaused()) {
+            hardDrop();
+            lTimeStep = System.currentTimeMillis();
         }
 
         if(nKeyPressed == DOWN && (playTime > lTimeStep + INPUT_DELAY - 35) && GameLogic.getInstance().isbPlaying()){
