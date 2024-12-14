@@ -17,9 +17,19 @@ public class GameScreen extends Panel {
     private GameFrame gmf;
     private Font font = new Font("Monospaced", Font.PLAIN, 12);
     private Font fontBig = new Font("Monospaced", Font.PLAIN + Font.ITALIC, 36);
-    private final Color retroGreen = new Color(0xd3f0cb);
-    private final Color borderGreen = new Color(0x2E8B57); // Slightly darker green for border
-    private final Color customBackground = new Color(0x55552e);
+    // Galaxy theme colors
+    private final Color spaceBackground = new Color(0x0B0B1A); // Deep space blue
+    private final Color starColor = new Color(0xFFFFFF); // White for stars
+    private final Color gridLineColor = new Color(0x4B0082); // Indigo for grid lines
+    private final Color[] galaxyColors = {
+        new Color(0xFF69B4), // Hot pink
+        new Color(0x9370DB), // Medium purple
+        new Color(0x00CED1), // Dark turquoise
+        new Color(0x7FFFD4), // Aquamarine
+        new Color(0xFF6347), // Tomato red
+        new Color(0x98FB98), // Pale green
+        new Color(0xDDA0DD)  // Plum
+    };
     private FontMetrics fontMetrics;
     private int nFontWidth;
     private int nFontHeight;
@@ -35,7 +45,7 @@ public class GameScreen extends Panel {
         initView();
 
         gmf.setSize(dimension);
-        gmf.setTitle("Old School Tetris");
+        gmf.setTitle("GALAXY TETRIS");
         gmf.setResizable(true);
         gmf.setVisible(true);
         this.setFocusable(true);
@@ -51,7 +61,7 @@ public class GameScreen extends Panel {
     }
 
     private void drawScore(Graphics graphics){
-        graphics.setColor(Color.white);
+        graphics.setColor(starColor);
         graphics.setFont(font);
         if(GameLogic.getInstance().getbScore() != 0){
             graphics.drawString(" SCORE :  " + GameLogic.getInstance().getbScore() + "     HIGH SCORE :  " + GameLogic.getInstance().getbHighScore(), nFontWidth, nFontHeight);
@@ -74,9 +84,20 @@ public class GameScreen extends Panel {
             grpOff = imgOff.getGraphics();
         }
 
-        grpOff.setColor(customBackground);
-        grpOff.fillRect(0,0, dimension.width, dimension.height);
-        grpOff.setColor(Color.white);
+        // Draw space background
+        grpOff.setColor(spaceBackground);
+        grpOff.fillRect(0, 0, dimension.width, dimension.height);
+
+        // Draw stars randomly
+        grpOff.setColor(starColor);
+        for (int i = 0; i < 100; i++) {
+            int x = (int)(Math.random() * dimension.width);
+            int y = (int)(Math.random() * dimension.height);
+            int size = (int)(Math.random() * 3) + 1;
+            grpOff.fillOval(x, y, size, size);
+        }
+
+        grpOff.setColor(starColor);
         grpOff.setFont(font);
 
         // Handle restarted state
@@ -90,7 +111,7 @@ public class GameScreen extends Panel {
         if(GameLogic.getInstance().isbGameOver()){
             displayTextOnScreen();
         } else if (!GameLogic.getInstance().isbPlaying()){
-            strDisplay = "OLD SCHOOL TETRIS";
+            strDisplay = "GALAXY TETRIS";
             if(!GameLogic.getInstance().isbLoaded()){
                 strDisplay = "Loading beatsies...";
                 grpOff.drawString(strDisplay, (dimension.width - fontMetrics.stringWidth(strDisplay))/2, dimension.height / 4 );
@@ -121,8 +142,8 @@ public class GameScreen extends Panel {
             int gridStartX = (dimension.width - (blockSize * Grid.COLS)) / 2;
             int gridStartY = (dimension.height - (blockSize * Grid.ROWS)) / 2;
             
-            // Draw the grid lines
-            grpOff.setColor(Color.WHITE);
+            // Draw the grid lines with galaxy theme
+            grpOff.setColor(gridLineColor);
             for (int i = 0; i <= Grid.ROWS; i++) {
                 int y = gridStartY + (i * blockSize);
                 grpOff.drawLine(gridStartX, y, gridStartX + (blockSize * Grid.COLS), y);
@@ -132,18 +153,20 @@ public class GameScreen extends Panel {
                 grpOff.drawLine(x, gridStartY, x, gridStartY + (blockSize * Grid.ROWS));
             }
 
-            // Draw the blocks
+            // Draw the blocks with galaxy colors
             Block[][] block = grid.getbBlock();
             for (int i = 0; i < block.length; i++) {
                 for (int j = 0; j < block[0].length; j++) {
-                    grpOff.setColor(block[i][j].getColor());
-                    grpOff.fill3DRect(
-                        gridStartX + (j * blockSize),
-                        gridStartY + (i * blockSize),
-                        blockSize,
-                        blockSize,
-                        true
-                    );
+                    if (block[i][j].isOccupied()) {
+                        grpOff.setColor(block[i][j].getColor());
+                        grpOff.fill3DRect(
+                            gridStartX + (j * blockSize),
+                            gridStartY + (i * blockSize),
+                            blockSize,
+                            blockSize,
+                            true
+                        );
+                    }
                 }
             }
 
@@ -171,7 +194,7 @@ public class GameScreen extends Panel {
             int previewX = dimension.width - previewSize - 20;
             int previewY = 20;
             
-            grpOff.setColor(Color.white);
+            grpOff.setColor(starColor);
             grpOff.drawString("Next Piece:", previewX, previewY);
             grpOff.draw3DRect(previewX, previewY + 20, previewSize, previewSize, true);
 
@@ -228,7 +251,7 @@ public class GameScreen extends Panel {
             }
         }
 
-        grpOff.setColor(Color.white);
+        grpOff.setColor(starColor);
         grpOff.draw3DRect(dimension.width - 150, 0, 150, dimension.height, true);
         grpOff.draw3DRect(dimension.width - 140, 10, 130, 130, true );
         boolean[][] lts = tetronimoOnDeck.getColoredSquares(tetronimoOnDeck.getbOrientation());
@@ -287,9 +310,12 @@ public class GameScreen extends Panel {
 
     private void displayStartText() {
         String[] instructions = {
-                "OLD SCHOOL TETRIS",
+                "GALAXY TETRIS",
                 "Use [Left, Right, Down] to Move Pieces",
                 "Use [Up] to Rotate Piece",
+                "Use [Space] for Hard Drop",
+                "[1] Normal Mode",
+                "[2] Hard Mode (Faster Speed)",
                 "[S] to Start",
                 "[P] to Pause",
                 "[Q] to Quit",

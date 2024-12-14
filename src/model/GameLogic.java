@@ -9,11 +9,16 @@ public class GameLogic {
     private long bHighScore;
     private int bThreshold;
     private long bScore;
-    private boolean bPlaying;
-    private boolean bPaused;
-    private boolean bLoaded;
-    private boolean bGameOver;
+    private boolean bPlaying = false;
+    private boolean bPaused = false;
+    private boolean bGameOver = false;
+    private boolean bLoaded = false;
     private boolean bRestarted = false;
+    private boolean isHardMode = false;
+    private int rowsCleared = 0;
+    private static final int ROWS_FOR_SPEED_INCREASE = 4;
+    private static final int NORMAL_SPEED_INCREASE = 15;
+    private static final int HARD_SPEED_INCREASE = 30;
 
     private List<Movable> moveTetronimoes = new ArrayList<>(300);
     private GameOperationsList operationsList = new GameOperationsList();
@@ -120,6 +125,29 @@ public class GameLogic {
         return instance;
     }
 
+    public void setHardMode(boolean hardMode) {
+        this.isHardMode = hardMode;
+        this.rowsCleared = 0;
+        // Reset speed when changing difficulty
+        Game.nAutoDelay = 500;
+    }
+
+    public boolean isHardMode() {
+        return isHardMode;
+    }
+
+    public void addRowCleared() {
+        rowsCleared++;
+        if (rowsCleared >= ROWS_FOR_SPEED_INCREASE) {
+            rowsCleared = 0;
+            if (isHardMode && Game.nAutoDelay > 50) {
+                Game.nAutoDelay -= HARD_SPEED_INCREASE;
+            } else if (!isHardMode && Game.nAutoDelay > 100) {
+                Game.nAutoDelay -= NORMAL_SPEED_INCREASE;
+            }
+        }
+    }
+
     // Reset game state
     public void resetGame() {
         bScore = 0;         
@@ -127,15 +155,15 @@ public class GameLogic {
         bPlaying = true;
         bPaused = false;
         bRestarted = true;
+        rowsCleared = 0;
 
         // Clear any remaining moving tetrominos
         moveTetronimoes.clear();
 
-        // Reinitialize difficulty threshold
+        // Reinitialize difficulty threshold and speed based on mode
         bThreshold = 2400;
         Game.nAutoDelay = 500;
     }
-
 
     public static void setInstance(GameLogic instance) {
         GameLogic.instance = instance;

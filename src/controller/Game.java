@@ -39,7 +39,9 @@ public class Game implements Runnable, KeyListener {
             MUTE = 77, // m-key
             DOWN = 40, // move piece down; down arrow
             UP = 38, // rotate piece; up arrow
-            SPACE = 32; // rotate piece
+            SPACE = 32, // hard drop
+            NORMAL = 49, // 1 key for normal mode
+            HARD = 50;   // 2 key for hard mode
 
     private Clip clipBGM;
     private Clip clipBomb;
@@ -296,6 +298,17 @@ public class Game implements Runnable, KeyListener {
         if(nKeyPressed == KeyEvent.VK_R) {
             restartGame();
             return;
+        }
+
+        // Handle difficulty selection before game starts
+        if (!GameLogic.getInstance().isbPlaying() && GameLogic.getInstance().isbLoaded()) {
+            if (nKeyPressed == NORMAL) {
+                GameLogic.getInstance().setHardMode(false);
+                System.out.println("Normal mode selected");
+            } else if (nKeyPressed == HARD) {
+                GameLogic.getInstance().setHardMode(true);
+                System.out.println("Hard mode selected");
+            }
         }
 
         if(nKeyPressed == START && GameLogic.getInstance().isbLoaded() && !GameLogic.getInstance().isbPlaying()){

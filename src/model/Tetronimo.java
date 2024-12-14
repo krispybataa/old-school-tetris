@@ -13,9 +13,20 @@ public class Tetronimo implements Movable{
     public Color bColor;
     public boolean[][][] bColoredSquares;
 
+    private static final Color[] COLORS = {
+        new Color(0xFF69B4), // Hot pink
+        new Color(0x9370DB), // Medium purple
+        new Color(0x00CED1), // Dark turquoise
+        new Color(0x7FFFD4), // Aquamarine
+        new Color(0xFF6347), // Tomato red
+        new Color(0x98FB98), // Pale green
+        new Color(0xDDA0DD)  // Plum
+    };
+
     public Tetronimo(){
         bCol = Game.R.nextInt(Grid.COLS - DIM);
         bOrientation = Game.R.nextInt(ORIENTATION);
+        bColor = COLORS[Game.R.nextInt(COLORS.length)];
         bColoredSquares = new boolean[ORIENTATION][DIM][DIM];
     }
 

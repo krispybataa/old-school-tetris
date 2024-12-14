@@ -103,6 +103,8 @@ public class Grid {
                 
                 // Award 100 points for clearing this row
                 GameLogic.getInstance().addbScore(100);
+                // Notify GameLogic about cleared row for difficulty adjustment
+                GameLogic.getInstance().addRowCleared();
 
                 // Update high score if needed
                 if(GameLogic.getInstance().getbScore() > GameLogic.getInstance().getbHighScore()){
