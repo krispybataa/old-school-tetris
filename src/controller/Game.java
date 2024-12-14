@@ -329,6 +329,19 @@ public class Game implements Runnable, KeyListener {
             System.exit(0);
         }
 
+        if(nKeyPressed == MUTE && playTime > lTimeStep + INPUT_DELAY) {
+            bMuted = !bMuted;
+            if(bMuted) {
+                if(clipBGM != null) clipBGM.stop();
+            } else {
+                if(clipBGM != null) {
+                    clipBGM.setMicrosecondPosition(0);
+                    clipBGM.loop(Clip.LOOP_CONTINUOUSLY);
+                }
+            }
+            lTimeStep = System.currentTimeMillis();
+        }
+
         if(nKeyPressed == SPACE && GameLogic.getInstance().isbPlaying() && !GameLogic.getInstance().isbPaused()) {
             hardDrop();
             lTimeStep = System.currentTimeMillis();
@@ -370,15 +383,6 @@ public class Game implements Runnable, KeyListener {
                 lTimeStep = System.currentTimeMillis();
             } else {
                 tetronimoTest = null;
-            }
-        }
-        if (nKeyPressed == MUTE) {
-            if (!bMuted) {
-                stopLoopingSounds(clipBGM);
-                bMuted = !bMuted;
-            } else {
-                clipBGM.loop(Clip.LOOP_CONTINUOUSLY);
-                bMuted = !bMuted;
             }
         }
     }

@@ -16,13 +16,13 @@ public class Sound {
                 Clip clp = AudioSystem.getClip();
 
                 AudioInputStream aisStream =
-                        AudioSystem.getAudioInputStream(Sound.class.getResourceAsStream(strPath));
-
+                        AudioSystem.getAudioInputStream(Sound.class.getResourceAsStream("/sounds/" + strPath));
 
                 clp.open(aisStream);
                 clp.start();
             } catch (Exception e) {
-                System.err.println(e.getMessage());
+                System.err.println("Error loading sound: " + e.getMessage());
+                e.printStackTrace();
             }
         }).start();
     }
@@ -31,19 +31,17 @@ public class Sound {
     //for looping wav clips
     //http://stackoverflow.com/questions/4875080/music-loop-in-java
     public static Clip clipForLoopFactory(String strPath){
-
         Clip clp = null;
-
-        // this line caused the original exceptions
 
         try {
             AudioInputStream aisStream =
-                    AudioSystem.getAudioInputStream(Sound.class.getResourceAsStream(strPath));
+                    AudioSystem.getAudioInputStream(Sound.class.getResourceAsStream("/sounds/" + strPath));
             clp = AudioSystem.getClip();
-            clp.open( aisStream );
+            clp.open(aisStream);
 
         } catch(Exception exp){
-            System.out.println("error");
+            System.out.println("Error loading sound: " + exp.getMessage());
+            exp.printStackTrace();
         }
 
         return clp;
