@@ -98,9 +98,11 @@ public class Grid {
                 rowsCleared++;
                 // Remove all blocks in the full row
                 for (Integer index : fullRowItems) {
-                    Block block = (Block) bOccupiedBlocks.remove(index.intValue());
-                    GameLogic.getInstance().addbScore(block.getPOINTVALUE());
+                    bOccupiedBlocks.remove(index.intValue());
                 }
+                
+                // Award 100 points for clearing this row
+                GameLogic.getInstance().addbScore(100);
 
                 // Update high score if needed
                 if(GameLogic.getInstance().getbScore() > GameLogic.getInstance().getbHighScore()){
