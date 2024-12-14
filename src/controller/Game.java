@@ -262,22 +262,20 @@ public class Game implements Runnable, KeyListener {
 
     private Tetronimo createNewTetronimo() {
         int nKey = R.nextInt(TETRONIMO_NO);
-        if (nKey >= 0 && nKey <= 12) {
+        if (nKey >= 0 && nKey <= 14) {
             return new LongPiece();
-        } else if (nKey > 12 && nKey <= 23) {
+        } else if (nKey > 14 && nKey <= 28) {
             return new SquarePiece();
-        } else if (nKey > 23 && nKey <= 35) {
+        } else if (nKey > 28 && nKey <= 42) {
             return new SPiece();
-        } else if (nKey > 35 && nKey <= 46) {
+        } else if (nKey > 42 && nKey <= 56) {
             return new TPiece();
-        } else if (nKey > 46 && nKey <= 58) {
+        } else if (nKey > 56 && nKey <= 70) {
             return new ZPiece();
-        } else if (nKey > 58 && nKey <= 71) {
+        } else if (nKey > 70 && nKey <= 84) {
             return new LPiece();
-        } else if (nKey > 71 && nKey <= 84) {
-            return new JYPiece();
         } else if (nKey > 84 && nKey <= 98) {
-            return new PlusPiece();
+            return new JYPiece();
         } else {
             return new Bomb(); //REPLACE WITH POWERUPS
         }

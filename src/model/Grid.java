@@ -78,57 +78,71 @@ public class Grid {
             }
         }
     }
-    synchronized public void checkCompletedRow(){
-        LinkedList<Integer> fullRowItems = new LinkedList<>();
-        LinkedList<Block> repositioningItems = new LinkedList<>();
+    synchronized public void checkCompletedRow() {
         int rowsCleared = 0;
+        boolean[] rowFull = new boolean[ROWS];
+        int[] blocksInRow = new int[ROWS];
 
-        int nRows = Grid.ROWS - 1;
-        while(nRows >= 0){
-            fullRowItems.clear();
-            // Count blocks in current row
-            for (int i = bOccupiedBlocks.size() - 1; i >= 0; i--) {
-                Block block = (Block) bOccupiedBlocks.get(i);
-                if(block.getbRow() == nRows){
-                    fullRowItems.add(i);
-                }
-            }
+        // First, count blocks in each row
+        for (Object obj : bOccupiedBlocks) {
+            Block block = (Block) obj;
+            blocksInRow[block.getbRow()]++;
+        }
 
-            if (fullRowItems.size() == Grid.COLS) {
+        // Mark which rows are full
+        for (int row = 0; row < ROWS; row++) {
+            if (blocksInRow[row] == COLS) {
+                rowFull[row] = true;
                 rowsCleared++;
-                // Remove all blocks in the full row
-                for (Integer index : fullRowItems) {
-                    bOccupiedBlocks.remove(index.intValue());
-                }
-                
-                // Award 100 points for clearing this row
-                GameLogic.getInstance().addbScore(100);
-                // Notify GameLogic about cleared row for difficulty adjustment
-                GameLogic.getInstance().addRowCleared();
-
-                // Update high score if needed
-                if(GameLogic.getInstance().getbScore() > GameLogic.getInstance().getbHighScore()){
-                    GameLogic.getInstance().setbHighScore(GameLogic.getInstance().getbScore());
-                }
-                GameLogic.getInstance().checkbThreshold();
-
-                // Move all blocks above this row down by one position
-                for (int i = bOccupiedBlocks.size() - 1; i >= 0; i--) {
-                    Block block = (Block) bOccupiedBlocks.get(i);
-                    if (block.getbRow() < nRows) {
-                        bOccupiedBlocks.remove(i);
-                        block.setbRow(block.getbRow() + rowsCleared);
-                        repositioningItems.add(block);
-                    }
-                }
-            } else {
-                nRows--;
             }
         }
 
-        // Add back all repositioned blocks
-        while(!repositioningItems.isEmpty()) {
-            bOccupiedBlocks.add(repositioningItems.removeLast());
+        if (rowsCleared > 0) {
+            // Award points for cleared rows
+            GameLogic.getInstance().addbScore(100 * rowsCleared);
+            
+            // Notify GameLogic about cleared rows for difficulty adjustment
+            for (int i = 0; i < rowsCleared; i++) {
+                GameLogic.getInstance().addRowCleared();
+            }
+
+            // Update high score if needed
+            if (GameLogic.getInstance().getbScore() > GameLogic.getInstance().getbHighScore()) {
+                GameLogic.getInstance().setbHighScore(GameLogic.getInstance().getbScore());
+            }
+            GameLogic.getInstance().checkbThreshold();
+
+            // Create a new list for the remaining blocks
+            ArrayList newBlocks = new ArrayList();
+
+            // Process each block
+            for (Object obj : bOccupiedBlocks) {
+                Block block = (Block) obj;
+                int row = block.getbRow();
+
+                // Skip blocks in cleared rows
+                if (rowFull[row]) {
+                    continue;
+                }
+
+                // Calculate how many rows below this block were cleared
+                int rowsBelow = 0;
+                for (int r = row + 1; r < ROWS; r++) {
+                    if (rowFull[r]) {
+                        rowsBelow++;
+                    }
+                }
+
+                // If there were rows cleared below this block, move it down
+                if (rowsBelow > 0) {
+                    block.setbRow(row + rowsBelow);
+                }
+
+                newBlocks.add(block);
+            }
+
+            // Replace the old blocks list with the new one
+            bOccupiedBlocks = newBlocks;
         }
     }
 
@@ -158,48 +172,6 @@ public class Grid {
             }
         }
     }
-
-//    synchronized public void setbBlock(Tetronimo tetronimo) {
-//        boolean[][] bC = tetronimo.getColoredSquares(tetronimo.bOrientation);
-//        Color color = tetronimo.bColor;
-//
-//        // Reset the grid's blocks to default state
-//        for (int i = 0; i < ROWS; i++) {
-//            for (int j = 0; j < COLS; j++) {
-//                if (bBlock[i][j] == null || !bBlock[i][j].isOccupied()) {
-//                    // Only reset blocks that are not occupied
-//                    bBlock[i][j] = new Block(false, Color.black, i, j); // Default black background
-//                }
-//            }
-//        }
-//
-//        // Map Tetronimo blocks onto the grid
-//        for (int i = tetronimo.bCol; i < tetronimo.bCol + DIM; i++) {
-//            for (int j = tetronimo.bRow; j < tetronimo.bRow + DIM; j++) {
-//                // Ensure Tetronimo blocks are within bounds
-//                if (i >= 0 && i < COLS && j >= 0 && j < ROWS) {
-//                    if (bC[j - tetronimo.bRow][i - tetronimo.bCol]) {
-//                        bBlock[j][i] = new Block(true, color, j, i); // Occupied block
-//                    }
-//                }
-//            }
-//        }
-//
-//        // Restore occupied blocks that are part of the static grid
-//        for (Object bOccupiedBlock : bOccupiedBlocks) {
-//            Block b = (Block) bOccupiedBlock;
-//            try {
-//                // Ensure blocks are within bounds before adding them
-//                if (b.getbRow() >= 0 && b.getbRow() < ROWS && b.getbCol() >= 0 && b.getbCol() < COLS) {
-//                    bBlock[b.getbRow()][b.getbCol()] = new Block(true, b.getColor(), b.getbRow(), b.getbCol());
-//                }
-//            } catch (NullPointerException e) {
-//                System.err.println("NullPointerException in setbBlock: " + e.getMessage());
-//            }
-//        }
-//    }
-
-
 
     synchronized public boolean requestLateral(Tetronimo tetronimo){
         boolean[][] bC;
